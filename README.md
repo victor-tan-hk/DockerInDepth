@@ -1,2 +1,2 @@
-# Docker in Depth
-## Sandisk 5 - 7 Aug
+# Docker in Depth workshop
+## Sandisk   5 - 7 Aug
