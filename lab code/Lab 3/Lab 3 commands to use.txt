@@ -1,0 +1,137 @@
+
+
+++++++ 5	Dockerfile for a NodeJS web app
+
+Create Dockerfile
+
+
+FROM node:14
+
+WORKDIR /app
+
+COPY . /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+
+RUN npm install
+
+EXPOSE 80
+
+CMD ["node", "server.js"]
+
+docker build -t firstnodeapp:latest .
+
+docker images
+
+docker run -d --name nodeapp firstnodeapp:latest
+
+docker ps
+
+docker exec -it nodeapp /bin/bash
+
+docker rm -f nodeapp
+
+docker ps -a
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+netstat -abon | findstr 3000
+
+tasklist | findstr PID
+
+docker rm -f nodeapp
+
+docker ps -a
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+docker build -t firstnodeapp .
+
+docker rm -f nodeapp
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+docker build -t firstnodeapp .
+
+docker rm -f nodeapp
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+
++++++ Rewrite Dockerfile
+
+
+FROM node:14
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+RUN npm install
+
+COPY . /app
+
+EXPOSE 80
+
+CMD ["node", "server.js"]
+
++++ Docker commands
+
+docker build -t firstnodeapp .
+
+docker rm -f nodeapp
+
+docker build -t firstnodeapp .
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+docker images
+
+docker inspect firstnodeapp
+
+docker inspect 
+
+docker rm -f nodeapp
+
+docker run --name nodeapp -p 3000:80 firstnodeapp
+
+docker logs nodeapp
+
+docker logs -f -t nodeapp
+
+docker rm -f nodeapp
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+docker attach nodeapp
+
+docker rm -f nodeapp
+
+docker run -d --rm --name nodeapp -p 3000:80 firstnodeapp
+
+docker stop nodeapp
+
+docker ps -a
+
+++++++ 6	Dockerfile for a Python CLI app
+
+Create Dockerfile
+
+docker build -t firstpythonapp .
+
+docker images
+
+docker run --name pythonapp firstpythonapp
+
+docker rm -f pythonapp
+
+docker run -it --name pythonapp firstpythonapp
+
+docker start pythonapp
+
+docker stop pythonapp
+
+docker start -ai pythonapp

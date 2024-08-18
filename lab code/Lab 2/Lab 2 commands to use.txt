@@ -1,0 +1,119 @@
+
+
+++++ 4	Running, stopping, starting and listing containers
+
+docker run hello-world
+
+docker images 
+
+docker ps
+
+docker ps -a
+
+docker pull alpine
+
+docker run -it alpine /bin/sh
+
+docker ps
+
+docker run -d --name superman -it alpine
+
+docker ps
+
+docker ps -a
+
+docker start container-name/id
+
+docker stop container-name/id
+
+docker restart container-name/id 
+
+docker ps --filter name=xxx 
+
++++++  5	Removing containers
+
+docker rm container-name/id  
+
+docker rm -f container-name/id  
+
+docker container prune
+
+docker rm -f $(docker ps -a -q)
+
+++++ 6	Attaching to a running container
+
+docker run -d --name superman -it alpine
+
+docker attach container-name/id
+
+docker exec -it container-name/id /bin/sh
+
+
+++++ 7	Interacting with the container file system
+
+docker start superman
+
+docker attach superman
+
+docker cp things.txt superman:/home/mystuff
+
+docker start
+
+docker attach superman
+
+docker cp superman:/home/mystuff/message.txt local-directory
+
+docker run --name batman -it alpine
+
+++++ 8	Retrieving container logs
+
+docker run --name spiderman -d ubuntu /bin/bash -c 'count=1; while true; do echo Counting $count; ((count++)); sleep 1; done'
+
+docker logs spiderman
+
+docker logs -f -t spiderman
+
+docker logs --tail 5 -t spiderman
+
+++++ 9	Inspecting containers
+
+docker top spiderman
+
+docker stats spiderman
+
+docker diff superman
+
+docker inspect superman
+
+docker inspect --format '{{ .State.Running }}' superman
+
+docker inspect --format '{{ .NetworkSettings.IPAddress }}' spiderman
+
+++++++ 10	Creating a custom image from a container
+
+docker commit -m "A new custom image" -a "Clark Kent" superman new-alpine:v1
+
+docker images
+
+docker inspect new-alpine:v1
+
+docker inspect  --format '{{.Author}} created :-  {{.Comment}}' new-alpine:v1
+
+docker inspect --format '{{.RootFS.Layers}}' alpine
+
+docker inspect  --format '{{.RootFS.Layers}}' new-alpine:v1
+
+docker run -d --name ironman -it new-alpine:v1
+
+docker attach ironman
+
+docker tag new-alpine:v1 dockerhub-username/new-alpine:v1
+
+docker push dockerhub-username/new-alpine:v1
+
+
+
+
+
+
+

@@ -1,2 +1,2 @@
 # Docker in Depth workshop
-## Sandisk   5 - 7 Aug
+## Keysight   19 - 21 Aug

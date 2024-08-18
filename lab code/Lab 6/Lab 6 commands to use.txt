@@ -1,0 +1,204 @@
+
+
++++++ 5	Basic Docker Compose for a single container
+
++++ Creating docker-compose.yaml
+
+services:
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+volumes: 
+  data:
+
+
++++ Docker commands:
+
+docker compose up
+
+docker compose up -d
+
+docker compose logs
+
+docker compose down
+
+docker compose up -d
+
+docker compose ps
+
+docker run -d --name spiderman -it alpine
+
+docker run -d --name superman -it alpine
+
+docker volume ls
+
+docker compose down
+
+docker volume ls
+
+
+++++ 6	Adding specifications for additional containers
+
+++ Creating backend.env
+
+MONGODB_USERNAME=max
+MONGODB_PASSWORD=secret
+
+
++++ Revised docker-compose.yaml
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - '80:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+volumes: 
+  data:
+  logs:
+
+
++++ Docker commands:
+
+docker compose up -d
+
+docker compose ps
+
+docker logs compose-demo-backend-1
+
+docker compose down
+
+
++++ Revised docker-compose.yaml
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - '80:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+    ports: 
+      - '3000:3000'
+    depends_on: 
+      - backend
+
+volumes: 
+  data:
+  logs:
+
++++ Docker commands
+
+
+docker compose up -d
+
+docker compose ps
+
+docker compose down
+
+docker compose up -d
+
+docker compose up --build
+
+docker compose build 
+
++++ Revised docker-compose.yaml
+
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    container_name: mymongo
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    container_name: mybackend
+    ports:
+      - '80:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: myfrontend      
+    ports: 
+      - '3000:3000'
+    depends_on: 
+      - backend
+
+volumes: 
+  data:
+  logs:
+
+
+++++ Docker commands
+
+docker compose up -d
+
+docker compose ps
+
+
+
+
+
+
+
+
+
