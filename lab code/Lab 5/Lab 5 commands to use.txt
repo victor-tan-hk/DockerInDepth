@@ -9,6 +9,9 @@ docker ps
 
 ++++++   5	Container to container communication
 
+
+++++ 5.1	Connecting via container IP address
+
 docker run -d --name mongodb mongo
 
 
@@ -23,6 +26,14 @@ docker build -t favorites-node  .
 docker run --name favorites -d -p 3000:3000 favorites-node 
 
 docker logs favorites
+
+Send POST request to http://localhost:3000/favorites
+
+{
+  "name" : "Superman",
+  "type" : "movie",
+  "url" : "krypton"
+}
 
 
 ++++++ 5.2	Connecting via container names in a Docker network
@@ -52,6 +63,7 @@ docker rm -f favorites
 
 ++++++ 6	3-tier web app implemented as multi container application 
 
++++++ 6.1	Configuring containers to communicate via localhost 
 
 docker run --name mongodb --rm -d -p 27017:27017 mongo
 
@@ -73,11 +85,11 @@ docker rm -f goals-backend
 
 docker rm -f goals-frontend
 
-docker run -d --name goals-backend --rm -p 80:80 goals-node
+docker run -d --name goals-backend --rm -p 5000:80 goals-node
 
 docker run --name goals-frontend --rm -p 3000:3000 goals-react
 
-tasklist | findstr "com.docker.backend.exe"
+tasklist | findstr "process name for rancher or docker"
 
 netstat -abon | findstr PID
 
@@ -99,13 +111,15 @@ docker build -t goals-node .
 
 docker run --name goals-backend --rm -d --network goals-net goals-node
 
+docker logs goals-backend
+
 docker build -t goals-react .
 
 docker run --name goals-frontend --rm -p 3000:3000 --network goals-net goals-react
 
 docker rm -f goals-backend
 
-docker run --name goals-backend --rm -d  -p 80:80 --network goals-net goals-node
+docker run --name goals-backend --rm -d  -p 5000:80 --network goals-net goals-node
 
 docker rm -f goals-frontend
 
@@ -123,15 +137,18 @@ docker rm -f mongodb
 
 docker run --name mongodb -v data:/data/db --rm -d --network goals-net mongo
 
-docker rm -f mongodb
-
-docker run --name mongodb -v data:/data/db --rm -d --network goals-net mongo
-
-docker rm -f mongodb
 
 docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin  -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
 
 docker rm -f goals-backend
+
+
+++++ Modify app.js
+
+mongoose.connect(
+  'mongodb://mongoadmin:secret@mongodb:27017/course-goals?authSource=admin',
+
+
 
 docker build -t goals-node .  
 
@@ -139,7 +156,7 @@ docker rm -f mongodb
 
 docker volume rm data
 
-docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin  -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
 
 docker run --name goals-backend --rm -d  -p 80:80 --network goals-net goals-node
 
@@ -147,10 +164,19 @@ docker rm -f mongodb
 
 docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin  -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
 
-Modify backend/app.js
+
+++++ Create .env
+
+MONGODB_USERNAME=mongoadmin
+MONGODB_PASSWORD=secret
+
+
+
++++++ Modify backend/app.js
 
 `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/course-goals?authSource=admin`,
 
+++++ Docker commands
 
 docker rm -f goals-backend
 

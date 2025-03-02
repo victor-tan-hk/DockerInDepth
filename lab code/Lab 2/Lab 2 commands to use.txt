@@ -30,15 +30,42 @@ docker restart container-name/id
 
 docker ps --filter name=xxx 
 
+docker run -d --name spiderman -it alpine
+docker run -d --name batman -it alpine
+
+
 +++++  5	Removing containers
 
 docker rm container-name/id  
 
 docker rm -f container-name/id  
 
+
++++ 5.1 Auto removal with the --rm flag
+
+docker run -d --name hulk -it alpine
+
+docker stop hulk 
+
+docker ps -a
+
+docker rm hulk 
+
+docker run -d --rm --name thor -it alpine
+
+docker stop thor
+
+docker ps -a
+
++++++ 5.2	Removing stopped / running containers 
+
+
 docker container prune
 
 docker rm -f $(docker ps -a -q)
+
+docker ps -a
+
 
 ++++ 6	Attaching to a running container
 
@@ -55,13 +82,39 @@ docker start superman
 
 docker attach superman
 
+
++++ Interative shell commands 
+
+cd home
+mkdir mystuff
+cd mystuff
+echo "Hello world" > message.txt
+cat message.txt
+exit
+
+
+cd home/mystuff
+cat message.txt
+exit
+
++++
+
+
 docker cp things.txt superman:/home/mystuff
 
-docker start
 
-docker attach superman
++++ Interative shell commands 
+
+cd home/mystuff
+ls -l
+cat things.txt
+exit
+
++++++
 
 docker cp superman:/home/mystuff/message.txt local-directory
+
+docker cp superman:/home/mystuff/message.txt . 
 
 docker run --name batman -it alpine
 

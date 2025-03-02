@@ -1,7 +1,7 @@
 
 
 
-+++++ 3	Anonymous volumes ++++
++++++ 3	Data persistence in containers ++++
 
 **** Create Dockerfile
 
@@ -35,13 +35,6 @@ localhost:3000/feedback/nameoftitle.txt
 
 docker exec -it feedback-app /bin/bash
 
-pwd
-ls -la
-cd feedback
-ls -la
-cat nameoftitle.txt
-exit
-
 
 docker stop feedback-app
 
@@ -56,6 +49,9 @@ localhost:3000/feedback/nameoftitle.txt
 docker stop feedback-app
 
 docker start feedback-app
+
+
+++++ 4 Anonymous volumes
 
 **** Modify Dockerfile
 
@@ -90,17 +86,7 @@ docker run -p 3000:80 -d --name feedback-app feedback-node:volumes
 
 docker volume ls
 
-docker rm -f feedback-app
-
-docker run -p 3000:80 -d --name feedback-app feedback-node:volumes
-
-docker volume ls
-
-docker rm -f feedback-app
-
-docker run -p 3000:80 -d --name feedback-app feedback-node:volumes
-
-docker volume ls
+docker inspect volume-name
 
 docker rm -f feedback-app
 
@@ -119,7 +105,7 @@ docker stop feedback-app
 docker volume ls
 
 
-+++++ 4	Named volumes ++++
++++++ 5	Named volumes ++++
 
 **** Modify Dockerfile
 
@@ -141,11 +127,16 @@ EXPOSE 80
 
 CMD ["node", "server.js"]
 
+
+++++ Docker commands
+
 docker build -t feedback-node:volumes .
 
 docker run -p 3000:80 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
 
 docker volume ls
+
+docker inspect volume feedback
 
 docker stop feedback-app
 
@@ -157,17 +148,35 @@ docker run -p 3000:80 -d --name feedback-app -v feedback:/app/feedback --rm feed
 
 localhost:3000/feedback/nameoftitle.txt
 
+docker volume ls -f dangling=true
+
 docker volume prune
 
 docker volume ls
+
+docker stop feedback-app
 
 docker pull alpine
 
 docker run --rm -it -v feedback:/mnt alpine /bin/sh
 
-+++ 5 Using Bind Mounts with Volumes
++++ Linux commands
+
+pwd
+
+cd /mnt
+
+ls -l
+
+cat dogs.txt
+
+exit
+
+++++ 6 Using Bind Mounts with Volumes
 
 docker run -p 3000:80 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
+
+docker rm -f feedback-app
 
 +++++ 5.1	Bind mount issues
 
@@ -189,7 +198,7 @@ docker exec -it feedback-app /bin/bash
 
 docker rm -f feedback-app
 
-docker run -p 3000:80 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
+docker run -p 3000:80 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app feedback-node:volumes
 
 docker start feedback-app
 
@@ -256,7 +265,7 @@ EXPOSE 80
 CMD [ "npm", "start" ]
 
 
-++ Docker commands
+++++ Docker commands
 
 docker build -t feedback-node:volumes .
 
@@ -305,9 +314,58 @@ docker volume ls
 
 docker volume rm second-feedback
 
-+++++ 6	Environment Variables and Build arguments
+
++++++ 6	Using bind mounts with utility containers
+
+
+docker run --rm -v ${pwd}:/app python:3.12-alpine python /app/demo.py
+
+docker run --rm -v ${pwd}:/app python:3.11-alpine python /app/demo.py
+
+docker run --rm -v ${pwd}:/app python:3.10-alpine python /app/demo.py
+
+docker run --rm -v ${pwd}:/app python:3.9-alpine python /app/demo.py
+
+
+
+docker run --rm -v ${pwd}:/app alpine /bin/sh -c  'grep -i "^cats" /app/sample.txt > /app/results.txt'
+
+
+docker run --rm -v ${pwd}:/app alpine /bin/sh -c  'grep -i "cats$" /app/sample.txt > /app/results.txt'
+
+
++++++ 7	Environment Variables and Build arguments
 
 docker rm -f feedback-app
+
+++ Modify server.js
+
+app.listen(process.env.PORT);
+
++++ Modify Dockerfile
+
+
+FROM node:14
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+
+RUN npm install
+
+COPY . /app
+
+ENV PORT 80
+
+EXPOSE $PORT
+
+CMD [ "npm", "start" ]
+
+
+++++ Docker commands
 
 docker build -t feedback-node:env .
 
@@ -323,6 +381,35 @@ docker rm -f feedback-app
 
 docker run -p 3000:8000 -d  --env-file ./.env --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app -v /app/node_modules feedback-node:env
 
+docker rm -f feedback-app
+
+++++ Modify Dockerfile
+
+
+FROM node:14
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+
+RUN npm install
+
+COPY . /app
+
+ARG DEFAULT_PORT=80
+
+ENV PORT $DEFAULT_PORT
+
+EXPOSE $PORT
+
+CMD [ "npm", "start" ]
+
+
++++++ Docker commands
+
 docker build -t feedback-node:web-app .
 
 docker build -t feedback-node:dev --build-arg DEFAULT_PORT=8000 .
@@ -333,7 +420,7 @@ docker image history feedback-node:web-app
 
 docker image history feedback-node:dev
 
-docker run -p 3000:80 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app -v /app/node_modules feedback-node:web-app
+docker run -p 3000:80 -d --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app -v /app/node_modules feedback-node:web-app
 
 docker rm -f feedback-app
 

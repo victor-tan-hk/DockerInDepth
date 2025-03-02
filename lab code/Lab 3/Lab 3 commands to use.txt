@@ -2,10 +2,12 @@
 
 ++++++ 5	Dockerfile for a NodeJS web app
 
-Create Dockerfile
+
+++++ Create Dockerfile
 
 
-FROM node:14
+
+FROM node:14.18.0
 
 WORKDIR /app
 
@@ -13,22 +15,38 @@ COPY . /app
 
 #include this if you get certificate related errors
 #RUN npm config set strict-ssl false
-
 RUN npm install
 
 EXPOSE 80
 
 CMD ["node", "server.js"]
 
-docker build -t firstnodeapp:latest .
+++++ Docker commands
+
+docker build -t firstnodeapp .
 
 docker images
 
-docker run -d --name nodeapp firstnodeapp:latest
+docker run -d --name nodeapp firstnodeapp
 
 docker ps
 
 docker exec -it nodeapp /bin/bash
+
++++ Linux commands ++++
+ls -l
+
+cd node_modules
+
+find . -type f | wc -l
+
+
+ps aux
+
+ss -tupln
+
+
+++++++
 
 docker rm -f nodeapp
 
@@ -46,6 +64,8 @@ docker ps -a
 
 docker run -d --name nodeapp -p 3000:80 firstnodeapp
 
++++++ 5.1	Optimizing sequencing of Dockerfile instructions
+
 docker build -t firstnodeapp .
 
 docker rm -f nodeapp
@@ -62,7 +82,7 @@ docker run -d --name nodeapp -p 3000:80 firstnodeapp
 +++++ Rewrite Dockerfile
 
 
-FROM node:14
+FROM node:14.18.0
 
 WORKDIR /app
 
@@ -78,7 +98,8 @@ EXPOSE 80
 
 CMD ["node", "server.js"]
 
-+++ Docker commands
+
++++++  Docker commands
 
 docker build -t firstnodeapp .
 
@@ -93,6 +114,21 @@ docker images
 docker inspect firstnodeapp
 
 docker inspect 
+
+
++++++ 5.2	Using a .dockerignore file
+
+docker build -t firstnodeapp .
+
+docker run -d --name nodeapp -p 3000:80 firstnodeapp
+
+docker exec -it nodeapp /bin/bash
+
+docker rm -f nodeapp
+
+docker build -t firstnodeapp .
+
++++++ 5.3	Detached mode and log output 
 
 docker rm -f nodeapp
 
@@ -110,6 +146,8 @@ docker attach nodeapp
 
 docker rm -f nodeapp
 
++++++ 5.4	Using the --rm flag
+
 docker run -d --rm --name nodeapp -p 3000:80 firstnodeapp
 
 docker stop nodeapp
@@ -118,7 +156,21 @@ docker ps -a
 
 ++++++ 6	Dockerfile for a Python CLI app
 
-Create Dockerfile
++++ Create Dockerfile
+
+
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+COPY . /app
+
+CMD [ "python", "rng.py" ]
+
+
+
++++ Docker commands
+
 
 docker build -t firstpythonapp .
 
@@ -135,3 +187,86 @@ docker start pythonapp
 docker stop pythonapp
 
 docker start -ai pythonapp
+
+
+++++++ 7	Dockerfile for a Python Flask web app
+
++++ Create Dockerfile
+
+
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8080
+
+CMD [ "python", "app.py"]
+
+
+
++++ Docker commands
+
+docker build -t firstflaskapp .
+
+docker images
+
+docker run --name flask-server -d -p 8080:8080 firstflaskapp
+
+docker ps
+
+docker rm -f flask-server
+
+docker ps -a
+
+
++++++ 8	Tagging and pushing to Docker Hub
+
+docker images
+
+
+docker tag firstpythonapp:latest dockerhubaccount/workshop-pythonapps:v1
+
+docker tag firstnodeapp:latest dockerhubaccount/workshop-nodeapps:v1
+
+docker tag firstflaskapp:latest dockerhubaccount/workshop-flaskapps:v1
+
+docker images
+
+docker login
+
+docker push dockerhubaccount/workshop-pythonapps:v1
+
+docker push dockerhubaccount/workshop-nodeapps:v1
+
+docker push dockerhubaccount/workshop-flaskapps:v1
+
+docker image prune --all
+
+docker images
+
+docker pull dockerhubaccount/workshop-pythonapps:v1
+
+docker pull dockerhubaccount/workshop-nodeapps:v1
+
+docker pull dockerhubaccount/workshop-flaskapps:v1
+
+docker run -d --rm --name nodeapp -p 3000:80 dockerhubaccount/workshop-nodeapps:v1
+
+docker run -it --name pythonapp dockerhubaccount/workshop-pythonapps:v1
+
+docker run --name flask-server -d -p 8080:8080 dockerhubaccount/workshop-flaskapps:v1
+
+
+docker rm -f nodeapp
+
+docker rm -f pythonapp
+
+docker rm -f flask-server
+
+

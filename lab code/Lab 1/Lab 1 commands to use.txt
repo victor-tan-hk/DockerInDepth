@@ -2,23 +2,26 @@
 +++++ 5	Pulling images from Docker Hub
 
 docker pull alpine:3.19
-
+docker images 
 docker pull alpine
 
-docker image pull alpine:3.18.8
-docker image pull alpine:3.18
+docker pull alpine:3.18.12
+docker pull alpine:3.18
 
-docker image pull alpine:3.17.9
-docker image pull alpine:3.17.8
+docker pull alpine:3.17.9
+docker pull alpine:3.17.8
 
 
 docker pull busybox
 docker pull busybox:glibc
-docker pull busybox:1.36.1-glibc
+docker pull busybox:1.37.0-glibc
 docker pull busybox:1.35-musl
 docker pull busybox:1.36-musl
 
 docker pull radial/busyboxplus
+
+
++++++ 6	Filtering listed images
 
 docker images 
 
@@ -31,6 +34,8 @@ docker images --filter=reference="*:latest"
 docker images --filter=reference="busybox:*glibc*"
 
 docker images --filter=reference="alpine:3.17*"
+
+docker images --help
 
 ++++ 7	Getting detailed information on images
 
@@ -51,7 +56,7 @@ docker rmi busybox:glibc
 
 docker images busybox
 
-docker rmi busybox:1.36.1-glibc
+docker rmi busybox:1.37.0-glibc
 
 docker rmi busybox:latest
 
@@ -65,9 +70,9 @@ docker image prune -a
 
 docker images 
 
-docker pull hello-world:nanoserver
-docker pull hello-world:latest
-docker pull hello-world:linux
+docker pull alpine:latest
+docker pull alpine:3.20
+docker pull alpine:3.19
 
 docker images -q
 

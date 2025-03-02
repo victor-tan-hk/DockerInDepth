@@ -2,7 +2,7 @@
 
 +++++ 5	Basic Docker Compose for a single container
 
-+++ Creating docker-compose.yaml
++++ Creating compose.yaml
 
 services:
   mongodb:
@@ -41,16 +41,18 @@ docker compose down
 
 docker volume ls
 
+docker compose down -v
+
 
 ++++ 6	Adding specifications for additional containers
 
-++ Creating backend.env
++++ Creating backend.env
 
 MONGODB_USERNAME=max
 MONGODB_PASSWORD=secret
 
 
-+++ Revised docker-compose.yaml
++++ Revised compose.yaml
 
 services:
   
@@ -66,7 +68,7 @@ services:
     build:
       context: ./backend
     ports:
-      - '80:80'
+      - '5000:80'
     volumes: 
       - logs:/app/logs
       - ./backend:/app
@@ -92,7 +94,7 @@ docker logs compose-demo-backend-1
 docker compose down
 
 
-+++ Revised docker-compose.yaml
+++++ Revised compose.yaml
 
 services:
   
@@ -108,7 +110,7 @@ services:
     build:
       context: ./backend
     ports:
-      - '80:80'
+      - '5000:80'
     volumes: 
       - logs:/app/logs
       - ./backend:/app
@@ -145,7 +147,7 @@ docker compose up --build
 
 docker compose build 
 
-+++ Revised docker-compose.yaml
++++ Revised compose.yaml
 
 
 services:
@@ -155,6 +157,8 @@ services:
     container_name: mymongo
     volumes: 
       - data:/data/db
+    networks:
+      - webapp-net
     environment:
        MONGO_INITDB_ROOT_USERNAME: max
        MONGO_INITDB_ROOT_PASSWORD: secret
@@ -164,11 +168,13 @@ services:
       context: ./backend
     container_name: mybackend
     ports:
-      - '80:80'
+      - '5000:80'
     volumes: 
       - logs:/app/logs
       - ./backend:/app
       - /app/node_modules  
+    networks:
+      - webapp-net    
     env_file: 
       - ./env/backend.env
     depends_on:
@@ -187,6 +193,10 @@ volumes:
   data:
   logs:
 
+networks:
+  webapp-net:
+
+
 
 ++++ Docker commands
 
@@ -194,9 +204,9 @@ docker compose up -d
 
 docker compose ps
 
+docker network ls
 
-
-
+docker compose down
 
 
 
