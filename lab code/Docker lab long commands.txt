@@ -1,0 +1,549 @@
+
+
+++++++ Docker Lab 1 images ++++ 
+
+No long commands
+
+
+++++++ Docker Lab 2 Containers ++++
+
++++ 7	Retrieving container logs
+
+docker run --name spiderman -d ubuntu /bin/bash -c 'count=1; while true; do echo Counting $count; ((count++)); sleep 1; done'
+
+
+++++ 9 Creating a custom image from a container
+
+docker commit -m "A new custom image" -a "Clark Kent" superman new-alpine:v1
+
+docker inspect  --format '{{.Author}} created :-  {{.Comment}}' new-alpine:v1
+
+
++++++++ Docker Lab 3 Dockerfile ++++++
+
+++++++ 5	Dockerfile for a NodeJS web app
+
+++++ Create Dockerfile
+
+FROM node:14.18.0
+
+WORKDIR /app
+
+COPY . /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+RUN npm install
+
+EXPOSE 80
+
+CMD ["node", "server.js"]
+
+
++++++ 5.1	Optimizing sequencing of Dockerfile instructions
+
++++++ Rewrite Dockerfile
+
+
+FROM node:14.18.0
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+RUN npm install
+
+COPY . /app
+
+EXPOSE 80
+
+CMD ["node", "server.js"]
+
+++++ 6	Dockerfile for a Python CLI app
+
++++ Create Dockerfile
+
+
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+COPY . /app
+
+CMD [ "python", "rng.py" ]
+
+
+++++ 7	Dockerfile for a Python Flask web app
+
++++ Create Dockerfile
+
+
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8080
+
+CMD [ "python", "app.py"]
+
+
++++++ 8	Tagging and pushing to Docker Hub
+
+
+docker tag firstpythonapp:latest dockerhubaccount/workshop-pythonapps:v1
+
+docker tag firstnodeapp:latest dockerhubaccount/workshop-nodeapps:v1
+
+docker tag firstflaskapp:latest dockerhubaccount/workshop-flaskapps:v1
+
+
+docker run -d --rm --name nodeapp -p 3000:80 dockerhubaccount/workshop-nodeapps:v1
+
+docker run -it --name pythonapp dockerhubaccount/workshop-pythonapps:v1
+
+docker run --name flask-server -d -p 8080:8080 dockerhubaccount/workshop-flaskapps:v1
+
+
++++++++ Docker Lab 4 Storage ++++++
+
+++++ 4	Creating custom image from Dockerfile
+
++++ Dockerfile 
+
+
+FROM node:lts-bookworm
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+
+RUN npm install
+
+COPY . /app
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+
++++++++++++++++
+
+docker run -p 3000:3000 -d --name feedback-app --rm feedback-node:volumes
+
+
++++++ 5	Named volumes
+
+docker run -p 3000:3000 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
+
+docker run -p 3000:3000 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
+
+++++ 5.2	Changing between different volumes with a container 
+
+docker run -p 3000:3000 -d --name feedback-app -v second-feedback:/app/feedback feedback-node:volumes
+
+docker run -p 3000:3000 -d --name feedback-app -v feedback:/app/feedback feedback-node:volumes
+
+docker cp tempcontainer:/mnt "/path/to/emptydirectory"
+
+
++++++ 6	Using Bind mounts with volumes
+
+docker run -p 3000:3000 -d --name feedback-app -v feedback:/app/feedback --rm feedback-node:volumes
+
+
++++++ 6.1 Specific bind mount
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}/pages:/app/pages feedback-node:volumes
+
+++++ 6.2	Adding a hot reload server monitor
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}/pages:/app/pages feedback-node:volumes
+
++++ Modifying package.json
+
+  "author": "workshop",
+  "license": "ISC",
+  "scripts" : {
+    "start" : "nodemon -L server.js"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.4"
+  },
+  "dependencies": {
+    "express": "^5.1.0"    
+  }
+
++++ Modifying Dockerfile
+
+FROM node:lts-bookworm
+
+WORKDIR /app
+
+COPY package.json /app
+
+#include this if you get certificate related errors
+#RUN npm config set strict-ssl false
+
+RUN npm install
+
+COPY . /app
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+
++++++++++++
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}/server.js:/app/server.js -v ${pwd}/pages:/app/pages feedback-node:volumes
+
++++ 6.3	Issues with generic bind mounts 
+
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app feedback-node:volumes
+
+docker cp feedback-app:/app "/path/to/emptydirectory"
+
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app feedback-node:volumes
+
+++++ 6.4	Bind mount exclusion with anonymous volumes
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app  -v dummy:/app/node_modules feedback-node:volumes
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app  -v /app/node_modules feedback-node:volumes
+
+docker run -p 3000:3000 -d  --name feedback-app -v feedback:/app/feedback -v ${pwd}:/app  -v /app/node_modules feedback-node:volumes
+
++++++ 7	Using bind mounts with utility containers
+
+docker run --rm -v ${pwd}:/app alpine /bin/sh -c  'grep -i "^cats" /app/sample.txt > /app/results.txt'
+
+
+docker run --rm -v ${pwd}:/app alpine /bin/sh -c  'grep -i "cats$" /app/sample.txt > /app/results.txt'
+
+
++++++ Docker Lab 5 Networking +++++
+
+++++ 5.1	Connecting via container IP address
+
+++++ Additional code in app.js ++++
+
+// Making the connection to the MongoDB application
+
+mongoose.connect(
+  'mongodb://IP-address-for-MongoDB-container:27017/swfavorites',
+  { useNewUrlParser: true,  useUnifiedTopology: true },
+  (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Connected successfully to MongoDB container !")
+    }
+  }
+);
+
+app.listen(3000);
+
++++++++
+
+
+Send POST request to 
+http://localhost:3000/favorites
+
+{
+  "name" : "Superman",
+  "type" : "movie",
+  "url" : "krypton"
+}
+
+
+
++++ 5.2	Connecting via container names in a Docker network
+
+++++ More changes to app.js 
+
+// Making the connection to the MongoDB application
+mongoose.connect(
+  'mongodb://mongodb:27017/swfavorites',
+  { useNewUrlParser: true,  useUnifiedTopology: true },
+.....
+.....
+....
+
+++++++++++
+
+
+docker run --name favorites -d -p 3000:3000 --network favorites-net favorites-node 
+
+
++++++ 6	3-tier web app implemented as multi container application 
+
++++ update app.js
+
+mongoose.connect(
+  'mongodb://host.docker.internal:27017/course-goals',
+
+
++++ Linux native host 
+docker run -d --name goals-backend --add-host=host.docker.internal:host-gateway goals-node
+
+
++++++ 6.2	Configuring containers to communicate via a Docker network
+
+
+docker run --name goals-backend --rm -d --network goals-net goals-node
+
+
+
++++ replacement in frontend/src/App.js 
+
+      try {
+        const response = await fetch('http://goals-backend:5000/goals');
+……
+
+    try {
+      const response = await fetch('http://goals-backend:5000/goals', {
+
+    try {
+      const response = await fetch('http://goals-backend:5000/goals/' + goalId, {
+        method: 'DELETE',
+      });
+
++++++++++++
+
+docker run --name goals-frontend --rm -p 3000:3000 --network goals-net goals-react
+
+docker run --name goals-backend --rm -d  -p 5000:80 --network goals-net goals-node
+
+
++++ replacement in frontend/src/App.js 
+
+      try {
+        const response = await fetch('http://localhost:5000/goals');
+……
+
+    try {
+      const response = await fetch('http://localhost:5000/goals', {
+
+    try {
+      const response = await fetch('http://localhost:5000/goals/' + goalId, {
+        method: 'DELETE',
+      });
+
++++++++++++
+
++++++ 6.3	Configuring volumes and authentication credentials for the MongoDB container
+
+docker run --name mongodb --rm -d --network goals-net mongo
+
+
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net mongo
+
+
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin  -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
+
+docker rm -f goals-backend
+
+
+++++ Modify app.js
+
+mongoose.connect(
+  'mongodb://mongoadmin:secret@mongodb:27017/course-goals?authSource=admin',
+
+++++++++
+
+
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
+
+docker run --name goals-backend --rm -d  -p 5000:80 --network goals-net goals-node
+
+
+docker run --name mongodb -v data:/data/db --rm -d --network goals-net -e MONGO_INITDB_ROOT_USERNAME=mongoadmin  -e MONGO_INITDB_ROOT_PASSWORD=secret  mongo
+
+
+++++ Create .env
+
+MONGODB_USERNAME=mongoadmin
+MONGODB_PASSWORD=secret
+
+
+
++++++ Modify backend/app.js
+
+`mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/course-goals?authSource=admin`,
+
+++++ 
+
+
+docker run --name goals-backend --rm -d  -p 5000:80 --env-file ./.env --network goals-net goals-node
+
+
++++++++ Lab 6 Using Docker Compose
+
+
++++++ 5	Basic Docker Compose for a MongoDB container
+
++++ Creating compose.yaml
+
+services:
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+volumes: 
+  data:
+
+
++++ 
+
+
+++++ 6	Docker Compose for backend and frontend containers
+
++++ Creating backend.env
+
+MONGODB_USERNAME=max
+MONGODB_PASSWORD=secret
+
+
++++ Revised compose.yaml
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - '5000:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+volumes: 
+  data:
+  logs:
+
+
++++ 
+
+
+++++ Revised compose.yaml
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - '5000:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+    ports: 
+      - '3000:3000'
+    depends_on: 
+      - backend
+
+volumes: 
+  data:
+  logs:
+
++++++ 
+
+
+
++++ Revised compose.yaml
+
+
+services:
+  
+  mongodb:
+    image: 'mongo'
+    container_name: mymongo
+    volumes: 
+      - data:/data/db
+    networks:
+      - webapp-net
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: max
+       MONGO_INITDB_ROOT_PASSWORD: secret
+
+  backend:
+    build:
+      context: ./backend
+    container_name: mybackend
+    ports:
+      - '5000:80'
+    volumes: 
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules  
+    networks:
+      - webapp-net    
+    env_file: 
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: myfrontend      
+    ports: 
+      - '3000:3000'
+    depends_on: 
+      - backend
+
+volumes: 
+  data:
+  logs:
+
+networks:
+  webapp-net:
+
+
+
++++++++ 

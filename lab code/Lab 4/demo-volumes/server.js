@@ -1,68 +1,80 @@
-const basicfs = require('fs');
-const fs = require('fs').promises;
-const exists = require('fs').exists;
+// ------------------- Module Imports -------------------
+const fs = require('fs');
+const fsp = require('fs').promises;
 const path = require('path');
-
 const express = require('express');
-const bodyParser = require('body-parser');
 
+// ------------------- App Initialization -------------------
 const app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
 
+// ------------------- Middleware -------------------
+// Parse URL-encoded bodies (replaces body-parser for forms)
+app.use(express.urlencoded({ extended: false }));
+
+// Serve static files
 app.use(express.static('public'));
 app.use('/feedback', express.static('feedback'));
 
-if (!basicfs.existsSync("temp")) {
-  basicfs.mkdirSync("temp");
-  console.log(`Directory temp created to hold temporary files.`);
-} 
+// ------------------- Directory Setup -------------------
+const ensureDirExists = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+    console.log(`Directory '${dir}' created.`);
+  }
+};
 
-if (!basicfs.existsSync("feedback")) {
-  basicfs.mkdirSync("feedback");
-  console.log(`Directory feedback created to hold permanent files.`);
-} 
+ensureDirExists('temp');
+ensureDirExists('feedback');
 
+// ------------------- Routes -------------------
 
+// GET / → Show feedback form
 app.get('/', (req, res) => {
   console.log("Loaded main page");
-  const filePath = path.join(__dirname, 'pages', 'feedback.html');
-  res.sendFile(filePath);
+  res.sendFile(path.join(__dirname, 'pages', 'feedback.html'));
 });
 
+// GET /exists → Duplicate title page
 app.get('/exists', (req, res) => {
-  console.log("Received request to store feeback for title that already exists");
-
-  const filePath = path.join(__dirname, 'pages', 'exists.html');
-  res.sendFile(filePath);
+  console.log("Received request to store feedback for title that already exists");
+  res.sendFile(path.join(__dirname, 'pages', 'exists.html'));
 });
 
-app.post('/create', async (req, res) => {
+// POST /create → Handle feedback form submission
+app.post('/create', async (req, res, next) => {
+  try {
+    console.log("Received request to store new feedback");
 
-  console.log("Received request to store new feedback");
+    const title = req.body.title?.toLowerCase();
+    const content = req.body.text;
 
-  const title = req.body.title;
-  const content = req.body.text;
-
-  const adjTitle = title.toLowerCase();
-
-  const tempFilePath = path.join(__dirname, 'temp', adjTitle + '.txt');
-  const finalFilePath = path.join(__dirname, 'feedback', adjTitle + '.txt');
-
-  await fs.writeFile(tempFilePath, content);
-  exists(finalFilePath, async (exists) => {
-    if (exists) {
-      res.redirect('/exists');
-    } else {
-
-      await fs.copyFile(tempFilePath, finalFilePath);
-      await fs.unlink(tempFilePath);
-      res.redirect('/');
-
+    if (!title || !content) {
+      return res.status(400).send("Missing title or content");
     }
-  });
+
+    const tempFilePath = path.join(__dirname, 'temp', `${title}.txt`);
+    const finalFilePath = path.join(__dirname, 'feedback', `${title}.txt`);
+
+    await fsp.writeFile(tempFilePath, content);
+
+    const exists = fs.existsSync(finalFilePath);
+
+    if (exists) {
+      return res.redirect('/exists');
+    }
+
+    await fsp.copyFile(tempFilePath, finalFilePath);
+    await fsp.unlink(tempFilePath);
+
+    res.redirect('/');
+  } catch (err) {
+    next(err);
+  }
 });
 
-console.log("App started and listening for requests")
-
-app.listen(80);
+// ------------------- Start Server -------------------
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`App started and listening on port :${PORT}`);
+});

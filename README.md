@@ -1,2 +1,2 @@
 # Docker in Depth workshop
-## Keysight   3 - 5 March
+## General   22 - 24 Oct
