@@ -1,2 +1,3 @@
 # Docker in Depth workshop
-## 22 - 24 Oct 2025
+## Keysight
+## 20 - 22 July 2026
